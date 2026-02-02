@@ -1,4 +1,4 @@
-# Конфигурация плагина HomesPlugin
+# Конфигурация плагина Homes
 
 # Настройки базы данных
 database:
@@ -32,9 +32,9 @@ teleport:
   # Настройки BossBar
   bossbar:
     # Заголовок BossBar (поддерживает {time} для времени)
-    title: "&6&lТелепортация через {time}с"
+    title: "&6&lТелепортация через: {time}сек"
     # Цвет BossBar (BLUE, GREEN, PINK, PURPLE, RED, WHITE, YELLOW)
-    color: YELLOW
+    color: PINK
     # Стиль BossBar (PROGRESS, NOTCHED_6, NOTCHED_10, NOTCHED_12, NOTCHED_20)
     style: PROGRESS
 

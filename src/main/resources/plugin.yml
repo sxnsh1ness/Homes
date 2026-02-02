@@ -1,7 +1,7 @@
 name: Homes
 version: ${version}
 main: io.github.sxnsh1ness.homes.HomesPlugin
-api-version: '1.21'
+api-version: '1.13'
 author: Sxnsh1ne
 depend: [LuckPerms]
 commands:
@@ -25,7 +25,7 @@ commands:
   homegui:
     description: Открыть GUI управления домами
     usage: /homegui
-    aliases: [homesgui, hgui, homesmenu]
+    aliases: [homesgui]
 permissions:
   homes.use:
     description: Позволяет использовать все команды плагина
