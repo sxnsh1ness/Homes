@@ -27,9 +27,9 @@ commands:
     usage: /homegui
     aliases: [homesgui, hgui, homesmenu]
 permissions:
-  homesplugin.use:
+  homes.use:
     description: Позволяет использовать все команды плагина
     default: true
-  homesplugin.admin:
+  homes.admin:
     description: Административные права
     default: op
