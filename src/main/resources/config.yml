@@ -29,12 +29,6 @@ teleport:
   cancel-on-move: true
   # Показывать эффекты пламени во время ожидания
   show-flame-effects: true
-  # Звук при начале телепортации
-  sound-start: BLOCK_PORTAL_TRIGGER
-  # Звук при успешной телепортации
-  sound-success: ENTITY_ENDERMAN_TELEPORT
-  # Звук при отмене телепортации
-  sound-cancel: ENTITY_VILLAGER_NO
   # Настройки BossBar
   bossbar:
     # Заголовок BossBar (поддерживает {time} для времени)

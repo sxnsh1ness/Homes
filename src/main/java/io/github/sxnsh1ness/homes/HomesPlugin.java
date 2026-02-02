@@ -4,6 +4,7 @@ import io.github.sxnsh1ness.homes.commands.*;
 import io.github.sxnsh1ness.homes.config.ConfigManager;
 import io.github.sxnsh1ness.homes.database.DatabaseManager;
 import io.github.sxnsh1ness.homes.gui.HomeGUI;
+import io.github.sxnsh1ness.homes.gui.InviteGUI;
 import io.github.sxnsh1ness.homes.listeners.ChatListener;
 import io.github.sxnsh1ness.homes.utils.CooldownManager;
 import io.github.sxnsh1ness.homes.utils.LuckPermsHelper;
@@ -44,7 +45,11 @@ public final class HomesPlugin extends JavaPlugin {
         teleportManager = new TeleportManager(this, configManager, cooldownManager);
 
         homeGUI = new HomeGUI(this, databaseManager, configManager, teleportManager, cooldownManager);
-        getServer().getPluginManager().registerEvents(new ChatListener(databaseManager, configManager, homeGUI), this);
+        InviteGUI inviteGUI = new InviteGUI(this, databaseManager, homeGUI);
+        homeGUI.setInviteGUI(inviteGUI);
+        ChatListener chatListener = new ChatListener(this, databaseManager, configManager, homeGUI);
+        chatListener.setInviteGUI(inviteGUI);
+        getServer().getPluginManager().registerEvents(chatListener, this);
 
         getCommand("home").setExecutor(new HomeCommand(databaseManager, configManager, teleportManager, cooldownManager));
         getCommand("sethome").setExecutor(new SetHomeCommand(databaseManager, configManager));

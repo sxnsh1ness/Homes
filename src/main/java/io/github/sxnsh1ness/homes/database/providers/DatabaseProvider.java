@@ -16,5 +16,10 @@ public interface DatabaseProvider {
     Home getHome(UUID playerUUID, String name);
     List<Home> getHomes(UUID playerUUID);
     int getHomeCount(UUID playerUUID);
+    boolean invitePlayer(UUID ownerUUID, String homeName, UUID invitedUUID);
+    boolean uninvitePlayer(UUID ownerUUID, String homeName, UUID invitedUUID);
+    boolean isInvited(UUID ownerUUID, String homeName, UUID invitedUUID);
+    List<UUID> getInvitedPlayers(UUID ownerUUID, String homeName);
+    List<Home> getInvitedHomes(UUID invitedUUID);
     void close();
 }

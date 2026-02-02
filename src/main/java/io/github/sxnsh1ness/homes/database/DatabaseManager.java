@@ -63,6 +63,26 @@ public class DatabaseManager {
         return provider.getHomeCount(playerUUID);
     }
 
+    public boolean invitePlayer(UUID ownerUUID, String homeName, UUID invitedUUID) {
+        return provider.invitePlayer(ownerUUID, homeName, invitedUUID);
+    }
+
+    public boolean uninvitePlayer(UUID ownerUUID, String homeName, UUID invitedUUID) {
+        return provider.uninvitePlayer(ownerUUID, homeName, invitedUUID);
+    }
+
+    public boolean isInvited(UUID ownerUUID, String homeName, UUID invitedUUID) {
+        return provider.isInvited(ownerUUID, homeName, invitedUUID);
+    }
+
+    public List<UUID> getInvitedPlayers(UUID ownerUUID, String homeName) {
+        return provider.getInvitedPlayers(ownerUUID, homeName);
+    }
+
+    public List<Home> getInvitedHomes(UUID invitedUUID) {
+        return provider.getInvitedHomes(invitedUUID);
+    }
+
     public void close() {
         if (provider != null) {
             provider.close();

@@ -7,7 +7,9 @@ import io.github.sxnsh1ness.homes.utils.CooldownManager;
 import io.github.sxnsh1ness.homes.utils.LuckPermsHelper;
 import io.github.sxnsh1ness.homes.utils.TeleportManager;
 import lombok.Getter;
+import lombok.Setter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
@@ -31,10 +33,14 @@ public class HomeGUI implements Listener {
     private final ConfigManager configManager;
     private final TeleportManager teleportManager;
     private final CooldownManager cooldownManager;
+    @Setter
+    private InviteGUI inviteGUI;
 
     private final Map<UUID, Integer> playerPages = new HashMap<>();
     @Getter
     private final Map<UUID, String> pendingRename = new HashMap<>();
+    @Getter
+    private final Map<UUID, Boolean> pendingCreate = new HashMap<>();
 
     private static final int ITEMS_PER_PAGE = 28; // 4 ряда по 7 предметов
 
@@ -62,7 +68,7 @@ public class HomeGUI implements Listener {
                         .color(NamedTextColor.DARK_PURPLE)
                         .decorate(TextDecoration.BOLD));
 
-        // Добавляем дома на текущую странице
+        // Добавляем дома на текущую страницу
         int startIndex = page * ITEMS_PER_PAGE;
         int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, homes.size());
 
@@ -87,9 +93,9 @@ public class HomeGUI implements Listener {
                     Component.text("Ваши дома: " + homes.size() + "/" + limitDisplay)
                             .color(NamedTextColor.GRAY),
                     Component.text(""),
-                    Component.text("Закройте это меню и используйте:")
+                    Component.text("Нажмите, чтобы создать точку дома")
                             .color(NamedTextColor.YELLOW),
-                    Component.text("/sethome <название>")
+                    Component.text("Введите название в чат")
                             .color(NamedTextColor.GOLD)
             ));
             createButton.setItemMeta(meta);
@@ -138,6 +144,17 @@ public class HomeGUI implements Listener {
         close.setItemMeta(closeMeta);
         gui.setItem(50, close);
 
+        ItemStack decoration = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta decorMeta = decoration.getItemMeta();
+        decorMeta.displayName(Component.text(""));
+        decoration.setItemMeta(decorMeta);
+
+        gui.setItem(46, decoration);
+        gui.setItem(47, decoration);
+        gui.setItem(48, decoration);
+        gui.setItem(51, decoration);
+        gui.setItem(52, decoration);
+
         player.openInventory(gui);
     }
 
@@ -156,6 +173,12 @@ public class HomeGUI implements Listener {
         lore.add(Component.text(String.format("Координаты: %.0f, %.0f, %.0f",
                         home.getX(), home.getY(), home.getZ()))
                 .color(NamedTextColor.GRAY));
+
+        // Количество приглашённых
+        int invitedCount = databaseManager.getInvitedPlayers(home.getPlayerUUID(), home.getName()).size();
+        lore.add(Component.text("Приглашено: " + invitedCount + " " + (invitedCount == 1 ? "игрок" : "игроков"))
+                .color(NamedTextColor.GRAY));
+
         lore.add(Component.text(""));
         lore.add(Component.text("ЛКМ")
                 .color(NamedTextColor.YELLOW)
@@ -164,6 +187,10 @@ public class HomeGUI implements Listener {
         lore.add(Component.text("ПКМ")
                 .color(NamedTextColor.YELLOW)
                 .append(Component.text(" - Переименовать")
+                        .color(NamedTextColor.GRAY)));
+        lore.add(Component.text("Средняя кнопка мыши")
+                .color(NamedTextColor.AQUA)
+                .append(Component.text(" - Управление приглашениями")
                         .color(NamedTextColor.GRAY)));
         lore.add(Component.text("SHIFT + ПКМ")
                 .color(NamedTextColor.RED)
@@ -211,9 +238,25 @@ public class HomeGUI implements Listener {
 
         // Создать дом
         if (slot == 49 && clicked.getType() == Material.EMERALD) {
+            pendingCreate.put(player.getUniqueId(), true);
             player.closeInventory();
-            player.sendMessage(Component.text("Используйте команду: /sethome <название>")
+            player.sendMessage(Component.text(""));
+            player.sendMessage(Component.text("═══════════════════════════════════")
+                    .color(NamedTextColor.GOLD)
+                    .decorate(TextDecoration.BOLD));
+            player.sendMessage(Component.text("  ⚡ Создание нового дома")
+                    .color(NamedTextColor.GREEN)
+                    .decorate(TextDecoration.BOLD));
+            player.sendMessage(Component.text("═══════════════════════════════════")
+                    .color(NamedTextColor.GOLD)
+                    .decorate(TextDecoration.BOLD));
+            player.sendMessage(Component.text(""));
+            player.sendMessage(Component.text("Введите название для нового дома:")
                     .color(NamedTextColor.YELLOW));
+            player.sendMessage(Component.text("(или напишите 'отмена' для отмены)")
+                    .color(NamedTextColor.GRAY));
+            player.sendMessage(Component.text(""));
+
             return;
         }
 
@@ -222,13 +265,21 @@ public class HomeGUI implements Listener {
             Component displayName = clicked.getItemMeta().displayName();
             if (displayName == null) return;
 
-            String homeName = ((net.kyori.adventure.text.TextComponent) displayName).content();
+            String homeName = ((TextComponent) displayName).content();
             Home home = databaseManager.getHome(player.getUniqueId(), homeName);
 
             if (home == null) {
                 player.sendMessage(Component.text("Дом не найден!")
                         .color(NamedTextColor.RED));
                 player.closeInventory();
+                return;
+            }
+
+            // Средняя кнопка мыши - Управление приглашениями
+            if (event.getClick().name().equals("MIDDLE")) {
+                if (inviteGUI != null) {
+                    inviteGUI.openInviteMenu(player, homeName);
+                }
                 return;
             }
 
@@ -260,18 +311,31 @@ public class HomeGUI implements Listener {
                 }
 
                 teleportManager.teleportWithDelay(player, home.getLocation(), homeName);
-            }
-            // ПКМ - Переименовать
-            else if (event.isRightClick() && !event.isShiftClick()) {
-                player.closeInventory();
+            } else if (event.isRightClick() && !event.isShiftClick()) {
                 pendingRename.put(player.getUniqueId(), homeName);
-                player.sendMessage(Component.text("Введите новое название дома в чат:")
+                player.closeInventory();
+                player.sendMessage(Component.text(""));
+                player.sendMessage(Component.text("═══════════════════════════════════")
+                        .color(NamedTextColor.GOLD)
+                        .decorate(TextDecoration.BOLD));
+                player.sendMessage(Component.text("  ✏️ Переименование дома")
+                        .color(NamedTextColor.AQUA)
+                        .decorate(TextDecoration.BOLD));
+                player.sendMessage(Component.text("═══════════════════════════════════")
+                        .color(NamedTextColor.GOLD)
+                        .decorate(TextDecoration.BOLD));
+                player.sendMessage(Component.text(""));
+                player.sendMessage(Component.text("Текущее название: ")
+                        .color(NamedTextColor.GRAY)
+                        .append(Component.text(homeName)
+                                .color(NamedTextColor.YELLOW)));
+                player.sendMessage(Component.text(""));
+                player.sendMessage(Component.text("Введите новое название в чат:")
                         .color(NamedTextColor.YELLOW));
                 player.sendMessage(Component.text("(или напишите 'отмена' для отмены)")
                         .color(NamedTextColor.GRAY));
-            }
-            // SHIFT + ПКМ - Удалить
-            else if (event.isRightClick() && event.isShiftClick()) {
+                player.sendMessage(Component.text(""));
+            } else if (event.isRightClick() && event.isShiftClick()) {
                 boolean success = databaseManager.deleteHome(player.getUniqueId(), homeName);
 
                 if (success) {

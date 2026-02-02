@@ -3,24 +3,35 @@ package io.github.sxnsh1ness.homes.listeners;
 import io.github.sxnsh1ness.homes.config.ConfigManager;
 import io.github.sxnsh1ness.homes.database.DatabaseManager;
 import io.github.sxnsh1ness.homes.gui.HomeGUI;
+import io.github.sxnsh1ness.homes.gui.InviteGUI;
+import io.github.sxnsh1ness.homes.utils.LuckPermsHelper;
 import io.papermc.paper.event.player.AsyncChatEvent;
+import lombok.Getter;
+import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Map;
 import java.util.UUID;
 
 public class ChatListener implements Listener {
 
+    private final JavaPlugin plugin;
     private final DatabaseManager databaseManager;
     private final ConfigManager configManager;
     private final HomeGUI homeGUI;
+    @Setter
+    private InviteGUI inviteGUI;
 
-    public ChatListener(DatabaseManager databaseManager, ConfigManager configManager, HomeGUI homeGUI) {
+    public ChatListener(JavaPlugin plugin, DatabaseManager databaseManager, ConfigManager configManager, HomeGUI homeGUI) {
+        this.plugin = plugin;
         this.databaseManager = databaseManager;
         this.configManager = configManager;
         this.homeGUI = homeGUI;
@@ -32,47 +43,235 @@ public class ChatListener implements Listener {
         UUID uuid = player.getUniqueId();
 
         Map<UUID, String> pendingRename = homeGUI.getPendingRename();
+        Map<UUID, Boolean> pendingCreate = homeGUI.getPendingCreate();
 
-        if (!pendingRename.containsKey(uuid)) return;
+        // Проверка на приглашение из InviteGUI
+        if (inviteGUI != null) {
+            Map<UUID, Boolean> pendingInvite = inviteGUI.getPendingInvite();
+            Map<UUID, String> openedHome = inviteGUI.getOpenedHome();
 
-        event.setCancelled(true);
+            if (pendingInvite.containsKey(uuid)) {
+                event.setCancelled(true);
+                pendingInvite.remove(uuid);
 
-        String oldName = pendingRename.remove(uuid);
-        String newName = ((TextComponent) event.message()).content();
+                String targetPlayerName = ((TextComponent) event.message()).content();
+                String homeName = openedHome.get(uuid);
 
-        if (newName.equalsIgnoreCase("отмена") || newName.equalsIgnoreCase("cancel")) {
-            player.sendMessage(Component.text("§eПереименование отменено."));
+                // Отмена
+                if (targetPlayerName.equalsIgnoreCase("отмена") || targetPlayerName.equalsIgnoreCase("cancel")) {
+                    player.sendMessage(Component.text(""));
+                    player.sendMessage(Component.text("Приглашение отменено.")
+                            .color(NamedTextColor.YELLOW));
+                    player.sendMessage(Component.text(""));
+
+                    // Открываем меню обратно
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        inviteGUI.openInviteMenu(player, homeName);
+                    });
+                    return;
+                }
+
+                // Поиск игрока
+                Player targetPlayer = Bukkit.getPlayer(targetPlayerName);
+                if (targetPlayer == null) {
+                    player.sendMessage(Component.text(""));
+                    player.sendMessage(Component.text("Игрок '" + targetPlayerName + "' не найден или не в сети!")
+                            .color(NamedTextColor.RED));
+                    player.sendMessage(Component.text(""));
+
+                    // Открываем меню обратно
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        inviteGUI.openInviteMenu(player, homeName);
+                    });
+                    return;
+                }
+
+                // Проверка, что не приглашаешь себя
+                if (targetPlayer.getUniqueId().equals(uuid)) {
+                    player.sendMessage(Component.text(""));
+                    player.sendMessage(Component.text("Вы не можете пригласить себя!")
+                            .color(NamedTextColor.RED));
+                    player.sendMessage(Component.text(""));
+
+                    // Открываем меню обратно
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        inviteGUI.openInviteMenu(player, homeName);
+                    });
+                    return;
+                }
+
+                // Проверка, не приглашён ли уже
+                if (databaseManager.isInvited(uuid, homeName, targetPlayer.getUniqueId())) {
+                    player.sendMessage(Component.text(""));
+                    player.sendMessage(Component.text("Игрок '" + targetPlayer.getName() + "' уже приглашён!")
+                            .color(NamedTextColor.YELLOW));
+                    player.sendMessage(Component.text(""));
+
+                    // Открываем меню обратно
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        inviteGUI.openInviteMenu(player, homeName);
+                    });
+                    return;
+                }
+
+                // Приглашение
+                boolean success = databaseManager.invitePlayer(uuid, homeName, targetPlayer.getUniqueId());
+
+                if (success) {
+                    player.sendMessage(Component.text(""));
+                    player.sendMessage(Component.text("✓ Игрок '" + targetPlayer.getName() + "' приглашён в дом '" + homeName + "'!")
+                            .color(NamedTextColor.GREEN));
+                    player.sendMessage(Component.text(""));
+
+                    targetPlayer.sendMessage(Component.text(""));
+                    targetPlayer.sendMessage(Component.text("✉ Игрок '" + player.getName() + "' пригласил вас в свой дом '" + homeName + "'!")
+                            .color(NamedTextColor.GREEN));
+                    targetPlayer.sendMessage(Component.text("Используйте /home visit " + player.getName() + " " + homeName)
+                            .color(NamedTextColor.GRAY));
+                    targetPlayer.sendMessage(Component.text(""));
+
+                    // Открываем обновленное меню
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        inviteGUI.openInviteMenu(player, homeName);
+                    });
+                } else {
+                    player.sendMessage(Component.text("Ошибка приглашения игрока!")
+                            .color(NamedTextColor.RED));
+                }
+
+                return;
+            }
+        }
+
+        // Проверка на переименование
+        if (pendingRename.containsKey(uuid)) {
+            event.setCancelled(true);
+
+            String oldName = pendingRename.remove(uuid);
+            String newName = ((TextComponent) event.message()).content();
+
+            // Отмена
+            if (newName.equalsIgnoreCase("отмена") || newName.equalsIgnoreCase("cancel")) {
+                player.sendMessage(Component.text("§eПереименование отменено."));
+                return;
+            }
+
+            // Проверка длины
+            if (newName.length() > 16) {
+                String message = configManager.getMessage("name-too-long");
+                player.sendMessage(Component.text(message));
+                return;
+            }
+
+            // Проверка символов
+            if (!newName.matches("[a-zA-Zа-яА-Я0-9_-]+")) {
+                String message = configManager.getMessage("invalid-name");
+                player.sendMessage(Component.text(message));
+                return;
+            }
+
+            // Проверка существования
+            if (databaseManager.getHome(uuid, newName) != null) {
+                String message = configManager.getMessage("home-exists",
+                        Map.of("name", newName));
+                player.sendMessage(Component.text(message));
+                return;
+            }
+
+            // Переименование
+            boolean success = databaseManager.renameHome(uuid, oldName, newName);
+
+            if (success) {
+                String message = configManager.getMessage("home-renamed",
+                        Map.of("old", oldName, "new", newName));
+                player.sendMessage(Component.text(message));
+            } else {
+                player.sendMessage(Component.text("§cОшибка переименования дома!"));
+            }
+
             return;
         }
 
-        if (newName.length() > 16) {
-            String message = configManager.getMessage("name-too-long");
-            player.sendMessage(Component.text(message));
-            return;
-        }
+        // Проверка на создание
+        if (pendingCreate.containsKey(uuid)) {
+            event.setCancelled(true);
+            pendingCreate.remove(uuid);
 
-        if (!newName.matches("[a-zA-Zа-яА-Я0-9_-]+")) {
-            String message = configManager.getMessage("invalid-name");
-            player.sendMessage(Component.text(message));
-            return;
-        }
+            String homeName = ((TextComponent) event.message()).content();
 
-        // Проверка существования
-        if (databaseManager.getHome(uuid, newName) != null) {
-            String message = configManager.getMessage("home-exists",
-                    Map.of("name", newName));
-            player.sendMessage(Component.text(message));
-            return;
-        }
+            // Отмена
+            if (homeName.equalsIgnoreCase("отмена") || homeName.equalsIgnoreCase("cancel")) {
+                player.sendMessage(Component.text(""));
+                player.sendMessage(Component.text("Создание дома отменено.")
+                        .color(NamedTextColor.YELLOW));
+                player.sendMessage(Component.text(""));
+                return;
+            }
 
-        boolean success = databaseManager.renameHome(player.getUniqueId(), oldName, newName);
+            // Проверка длины
+            if (homeName.length() > 16) {
+                String message = configManager.getMessage("name-too-long");
+                player.sendMessage(Component.text(message));
+                return;
+            }
 
-        if (success) {
-            String message = configManager.getMessage("home-renamed",
-                    Map.of("old", oldName, "new", newName));
-            player.sendMessage(Component.text(message));
-        } else {
-            player.sendMessage(Component.text("§cОшибка переименования дома!"));
+            // Проверка символов
+            if (!homeName.matches("[a-zA-Zа-яА-Я0-9_-]+")) {
+                String message = configManager.getMessage("invalid-name");
+                player.sendMessage(Component.text(message));
+                return;
+            }
+
+            // Проверка лимита
+            int homeCount = databaseManager.getHomeCount(uuid);
+            int limit = LuckPermsHelper.getHighestLimit(player, configManager);
+
+            if (limit != -1 && homeCount >= limit) {
+                String message = configManager.getMessage("home-limit-reached",
+                        Map.of("limit", String.valueOf(limit)));
+                player.sendMessage(Component.text(message));
+                return;
+            }
+
+            // Проверка существования
+            if (databaseManager.getHome(uuid, homeName) != null) {
+                // Обновляем существующий дом
+                boolean success = databaseManager.createHome(uuid, homeName, player.getLocation());
+
+                if (success) {
+                    String message = configManager.getMessage("home-updated",
+                            Map.of("name", homeName));
+                    player.sendMessage(Component.text(""));
+                    player.sendMessage(Component.text(message));
+                    player.sendMessage(Component.text(""));
+
+                    // Открываем GUI обратно через синхронную задачу
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        homeGUI.openGUI(player, 0);
+                    });
+                } else {
+                    player.sendMessage(Component.text("§cОшибка обновления дома!"));
+                }
+                return;
+            }
+
+            // Создание нового дома
+            boolean success = databaseManager.createHome(uuid, homeName, player.getLocation());
+
+            if (success) {
+                String message = configManager.getMessage("home-set",
+                        Map.of("name", homeName));
+                player.sendMessage(Component.text(""));
+                player.sendMessage(Component.text(message));
+                player.sendMessage(Component.text(""));
+
+                // Открываем GUI обратно через синхронную задачу
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    homeGUI.openGUI(player, 0);
+                });
+            } else {
+                player.sendMessage(Component.text("§cОшибка создания дома!"));
+            }
         }
     }
 }

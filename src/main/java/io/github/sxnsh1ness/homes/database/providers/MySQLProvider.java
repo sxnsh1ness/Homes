@@ -70,10 +70,19 @@ public class MySQLProvider implements DatabaseProvider {
                 "pitch FLOAT NOT NULL," +
                 "UNIQUE KEY unique_home (player_uuid, name)" +
                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+        String invitesSql = "CREATE TABLE IF NOT EXISTS home_invites (" +
+                "id INT AUTO_INCREMENT PRIMARY KEY," +
+                "owner_uuid VARCHAR(36) NOT NULL," +
+                "home_name VARCHAR(16) NOT NULL," +
+                "invited_uuid VARCHAR(36) NOT NULL," +
+                "UNIQUE KEY unique_invite (owner_uuid, home_name, invited_uuid)," +
+                "INDEX idx_invited (invited_uuid)" +
+                ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
+            stmt.execute(invitesSql);
             plugin.getLogger().info("MySQL таблицы успешно созданы!");
         } catch (SQLException e) {
             plugin.getLogger().severe("Ошибка создания таблиц MySQL: " + e.getMessage());
@@ -216,6 +225,107 @@ public class MySQLProvider implements DatabaseProvider {
             plugin.getLogger().warning("Ошибка подсчета домов: " + e.getMessage());
         }
         return 0;
+    }
+
+    @Override
+    public boolean invitePlayer(UUID ownerUUID, String homeName, UUID invitedUUID) {
+        String sql = "INSERT INTO home_invites (owner_uuid, home_name, invited_uuid) VALUES (?, ?, ?)";
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, ownerUUID.toString());
+            pstmt.setString(2, homeName.toLowerCase());
+            pstmt.setString(3, invitedUUID.toString());
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean uninvitePlayer(UUID ownerUUID, String homeName, UUID invitedUUID) {
+        String sql = "DELETE FROM home_invites WHERE owner_uuid = ? AND home_name = ? AND invited_uuid = ?";
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, ownerUUID.toString());
+            pstmt.setString(2, homeName.toLowerCase());
+            pstmt.setString(3, invitedUUID.toString());
+            int affected = pstmt.executeUpdate();
+            return affected > 0;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean isInvited(UUID ownerUUID, String homeName, UUID invitedUUID) {
+        String sql = "SELECT COUNT(*) FROM home_invites WHERE owner_uuid = ? AND home_name = ? AND invited_uuid = ?";
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, ownerUUID.toString());
+            pstmt.setString(2, homeName.toLowerCase());
+            pstmt.setString(3, invitedUUID.toString());
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().warning("Ошибка проверки приглашения: " + e.getMessage());
+        }
+        return false;
+    }
+
+    @Override
+    public List<UUID> getInvitedPlayers(UUID ownerUUID, String homeName) {
+        List<UUID> invitedPlayers = new ArrayList<>();
+        String sql = "SELECT invited_uuid FROM home_invites WHERE owner_uuid = ? AND home_name = ?";
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, ownerUUID.toString());
+            pstmt.setString(2, homeName.toLowerCase());
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                invitedPlayers.add(UUID.fromString(rs.getString("invited_uuid")));
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().warning("Ошибка получения списка приглашённых: " + e.getMessage());
+        }
+        return invitedPlayers;
+    }
+
+    @Override
+    public List<Home> getInvitedHomes(UUID invitedUUID) {
+        List<Home> homes = new ArrayList<>();
+        String sql = "SELECT h.* FROM homes h " +
+                "INNER JOIN home_invites hi ON h.player_uuid = hi.owner_uuid AND h.name = hi.home_name " +
+                "WHERE hi.invited_uuid = ? ORDER BY h.name";
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, invitedUUID.toString());
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                homes.add(new Home(
+                        UUID.fromString(rs.getString("player_uuid")),
+                        rs.getString("name"),
+                        rs.getString("world"),
+                        rs.getDouble("x"),
+                        rs.getDouble("y"),
+                        rs.getDouble("z"),
+                        rs.getFloat("yaw"),
+                        rs.getFloat("pitch")
+                ));
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().warning("Ошибка получения домов с приглашениями: " + e.getMessage());
+        }
+        return homes;
     }
 
     @Override
