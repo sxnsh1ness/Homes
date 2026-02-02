@@ -1,0 +1,35 @@
+name: HomesPlugin
+version: ${version}
+main: io.github.sxnsh1ness.homes.HomesPlugin
+api-version: '1.21'
+author: Sxnsh1ne
+depend: [LuckPerms]
+commands:
+  home:
+    description: Телепортироваться на точку дома
+    usage: /home <название>
+  sethome:
+    description: Создать точку дома
+    usage: /sethome <название>
+  deletehome:
+    description: Удалить точку дома
+    usage: /<command> <название>
+    aliases: [delhome]
+  renamehome:
+    description: Переименовать точку дома
+    usage: /renamehome <старое_название> <новое_название>
+  homes:
+    description: Посмотреть список ваших домов
+    usage: /homes
+    aliases: [listhomes]
+  homegui:
+    description: Открыть GUI управления домами
+    usage: /homegui
+    aliases: [homesgui, hgui, homesmenu]
+permissions:
+  homesplugin.use:
+    description: Позволяет использовать все команды плагина
+    default: true
+  homesplugin.admin:
+    description: Административные права
+    default: op

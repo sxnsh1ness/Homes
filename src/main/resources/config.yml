@@ -1,0 +1,88 @@
+# Конфигурация плагина HomesPlugin
+
+# Настройки базы данных
+database:
+  # Тип базы данных: SQLITE или MYSQL
+  type: SQLITE
+
+  # Настройки для MySQL (используются только если type: MYSQL)
+  mysql:
+    host: localhost
+    port: 3306
+    database: minecraft
+    username: root
+    password: password
+    # Дополнительные параметры подключения
+    useSSL: false
+    autoReconnect: true
+    # Пул соединений
+    pool:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+# Настройки телепортации
+teleport:
+  # Задержка перед телепортацией в секундах
+  delay: 5
+  # Отменять телепортацию при движении
+  cancel-on-move: true
+  # Показывать эффекты пламени во время ожидания
+  show-flame-effects: true
+  # Звук при начале телепортации
+  sound-start: BLOCK_PORTAL_TRIGGER
+  # Звук при успешной телепортации
+  sound-success: ENTITY_ENDERMAN_TELEPORT
+  # Звук при отмене телепортации
+  sound-cancel: ENTITY_VILLAGER_NO
+  # Настройки BossBar
+  bossbar:
+    # Заголовок BossBar (поддерживает {time} для времени)
+    title: "&6&lТелепортация через {time}с"
+    # Цвет BossBar (BLUE, GREEN, PINK, PURPLE, RED, WHITE, YELLOW)
+    color: YELLOW
+    # Стиль BossBar (PROGRESS, NOTCHED_6, NOTCHED_10, NOTCHED_12, NOTCHED_20)
+    style: PROGRESS
+
+# Настройки кулдауна команд
+cooldown:
+  # Кулдаун команды /home в секундах
+  home-command: 3
+  # Применять кулдаун после успешной телепортации или после использования команды
+  # true = кулдаун после использования команды
+  # false = кулдаун только после успешной телепортации
+  apply-on-command: true
+
+# Лимиты домов для групп LuckPerms
+# Формат: название_группы: количество_домов
+group-limits:
+  default: 2      # Обычные игроки - 2 дома
+  vip: 5          # VIP игроки - 5 домов
+  premium: 10     # Premium игроки - 10 домов
+  admin: 20       # Администраторы - 20 домов
+  owner: -1       # Владельцы - безлимит (-1 означает без ограничений)
+
+# Лимит по умолчанию, если группа не найдена в списке выше
+default-limit: 2
+
+# Сообщения (поддерживает цветовые коды &)
+messages:
+  home-set: "&aДом '&e{name}&a' успешно установлен!"
+  home-updated: "&eДом '&6{name}&e' обновлен!"
+  home-deleted: "&aДом '&e{name}&a' успешно удален!"
+  home-renamed: "&aДом '&e{old}&a' переименован в '&e{new}&a'!"
+  home-teleported: "&aВы телепортировались в дом '&e{name}&a'!"
+  home-not-found: "&cДом '&e{name}&c' не найден!"
+  home-limit-reached: "&cВы достигли максимального количества домов (&e{limit}&c)!"
+  world-not-found: "&cМир '&e{world}&c' не найден! Дом недоступен."
+  invalid-name: "&cНазвание дома может содержать только буквы, цифры, _ и -"
+  name-too-long: "&cНазвание дома не может быть длиннее 16 символов!"
+  home-exists: "&cДом с названием '&e{name}&c' уже существует!"
+  no-homes: "&eУ вас нет установленных домов!"
+  homes-header: "&6&l═══════════════════════════"
+  homes-title: "&6&lВаши дома ({count}/{limit}):"
+  homes-footer: "&8─────────────────────────"
+  homes-hint: "&7Используйте /home <название> для телепортации"
+  teleport-started: "&eПриготовьтесь к телепортации... &7Не двигайтесь!"
+  teleport-cancelled: "&cТелепортация отменена! Вы сдвинулись с места."
+  command-on-cooldown: "&cПодождите еще &e{time}&c секунд перед использованием этой команды!"
