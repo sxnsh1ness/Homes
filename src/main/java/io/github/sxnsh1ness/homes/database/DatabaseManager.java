@@ -1,11 +1,11 @@
 package io.github.sxnsh1ness.homes.database;
 
+import io.github.sxnsh1ness.homes.HomesPlugin;
+import io.github.sxnsh1ness.homes.config.ConfigManager;
 import io.github.sxnsh1ness.homes.database.providers.DatabaseProvider;
 import io.github.sxnsh1ness.homes.database.providers.MySQLProvider;
 import io.github.sxnsh1ness.homes.database.providers.SQLiteProvider;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
@@ -13,26 +13,20 @@ import java.util.UUID;
 
 public class DatabaseManager {
 
-    private final JavaPlugin plugin;
     private DatabaseProvider provider;
 
-    public DatabaseManager(JavaPlugin plugin) {
-        this.plugin = plugin;
-    }
-
     public void initialize() {
-        FileConfiguration config = plugin.getConfig();
-        String databaseType = config.getString("database.type", "SQLITE").toUpperCase();
+        String databaseType = ConfigManager.getConfig().getString("database.type", "SQLITE").toUpperCase();
 
         switch (databaseType) {
             case "MYSQL":
-                plugin.getLogger().info("Инициализация MySQL базы данных...");
-                provider = new MySQLProvider(plugin, config);
+                HomesPlugin.getInstance().getLogger().info("Инициализация MySQL базы данных...");
+                provider = new MySQLProvider();
                 break;
             case "SQLITE":
             default:
-                plugin.getLogger().info("Инициализация SQLite базы данных...");
-                provider = new SQLiteProvider(plugin);
+                HomesPlugin.getInstance().getLogger().info("Инициализация SQLite базы данных...");
+                provider = new SQLiteProvider();
                 break;
         }
 
