@@ -1,6 +1,7 @@
 package io.github.sxnsh1ness.homes.commands;
 
 import io.github.sxnsh1ness.homes.config.ConfigManager;
+import io.github.sxnsh1ness.homes.config.PluginMessages;
 import io.github.sxnsh1ness.homes.database.DatabaseManager;
 import io.github.sxnsh1ness.homes.database.Home;
 import io.github.sxnsh1ness.homes.utils.CooldownManager;
@@ -17,11 +18,10 @@ import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Map;
 
 public class HomeCommand implements CommandExecutor {
 
-    private final DatabaseManager databaseManager;;
+    private final DatabaseManager databaseManager;
     private final TeleportManager teleportManager;
     private final CooldownManager cooldownManager;
 
@@ -72,9 +72,7 @@ public class HomeCommand implements CommandExecutor {
 
         if (!cooldownManager.hasCooldown(player)) {
             int remainingTime = cooldownManager.getRemainingCooldown(player);
-            String message = ConfigManager.getMessage("command-on-cooldown",
-                    Map.of("time", String.valueOf(remainingTime)));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "command-on-cooldown", "{time}", String.valueOf(remainingTime));
             return true;
         }
 
@@ -82,18 +80,14 @@ public class HomeCommand implements CommandExecutor {
         Home home = databaseManager.getHome(player.getUniqueId(), homeName);
 
         if (home == null) {
-            String message = ConfigManager.getMessage("home-not-found",
-                    Map.of("name", homeName));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "home-not-found", "{name}", homeName);
             return true;
         }
 
         Location location = home.getLocation();
 
         if (location.getWorld() == null) {
-            String message = ConfigManager.getMessage("world-not-found",
-                    Map.of("world", home.getWorldName()));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "world-not-found", "{world}", home.getWorldName());
             return true;
         }
 
@@ -118,9 +112,7 @@ public class HomeCommand implements CommandExecutor {
         // Проверка существования дома
         Home home = databaseManager.getHome(player.getUniqueId(), homeName);
         if (home == null) {
-            String message = ConfigManager.getMessage("home-not-found",
-                    Map.of("name", homeName));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "home-not-found", "{name}", homeName);
             return true;
         }
 
@@ -169,9 +161,7 @@ public class HomeCommand implements CommandExecutor {
         // Проверка существования дома
         Home home = databaseManager.getHome(player.getUniqueId(), homeName);
         if (home == null) {
-            String message = ConfigManager.getMessage("home-not-found",
-                    Map.of("name", homeName));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "home-not-found", "{name}", homeName);
             return true;
         }
 
@@ -229,9 +219,7 @@ public class HomeCommand implements CommandExecutor {
         // Проверка кулдауна
         if (!cooldownManager.hasCooldown(player)) {
             int remainingTime = cooldownManager.getRemainingCooldown(player);
-            String message = ConfigManager.getMessage("command-cooldown",
-                    Map.of("time", String.valueOf(remainingTime)));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "command-on-cooldown", "{time}", String.valueOf(remainingTime));
             return true;
         }
 
@@ -239,9 +227,7 @@ public class HomeCommand implements CommandExecutor {
 
         // Проверка мира
         if (location.getWorld() == null) {
-            String message = ConfigManager.getMessage("world-not-found",
-                    Map.of("world", home.getWorldName()));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "world-not-found", "{world}", home.getWorldName());
             return true;
         }
 
@@ -321,9 +307,7 @@ public class HomeCommand implements CommandExecutor {
 
         // Проверка мира
         if (location.getWorld() == null) {
-            String message = ConfigManager.getMessage("world-not-found",
-                    Map.of("world", home.getWorldName()));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "world-not-found", "{world}", home.getWorldName());
             return true;
         }
 
