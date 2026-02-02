@@ -1,11 +1,10 @@
 package io.github.sxnsh1ness.homes.database.providers;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
+import io.github.sxnsh1ness.homes.HomesPlugin;
+import io.github.sxnsh1ness.homes.config.ConfigManager;
 import io.github.sxnsh1ness.homes.database.Home;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -14,27 +13,19 @@ import java.util.UUID;
 
 public class MySQLProvider implements DatabaseProvider {
 
-    private final JavaPlugin plugin;
-    private final FileConfiguration config;
-    private MysqlDataSource dataSource;
+    private static MysqlDataSource dataSource;
 
-    public MySQLProvider(JavaPlugin plugin, FileConfiguration config) {
-        this.plugin = plugin;
-        this.config = config;
-    }
-
-    @Override
     public void initialize() {
         try {
             dataSource = new MysqlDataSource();
 
-            String host = config.getString("database.mysql.host", "localhost");
-            int port = config.getInt("database.mysql.port", 3306);
-            String database = config.getString("database.mysql.database", "minecraft");
-            String username = config.getString("database.mysql.username", "root");
-            String password = config.getString("database.mysql.password", "password");
-            boolean useSSL = config.getBoolean("database.mysql.useSSL", false);
-            boolean autoReconnect = config.getBoolean("database.mysql.autoReconnect", true);
+            String host = ConfigManager.getConfig().getString("database.mysql.host", "localhost");
+            int port = ConfigManager.getConfig().getInt("database.mysql.port", 3306);
+            String database = ConfigManager.getConfig().getString("database.mysql.database", "minecraft");
+            String username = ConfigManager.getConfig().getString("database.mysql.username", "root");
+            String password = ConfigManager.getConfig().getString("database.mysql.password", "password");
+            boolean useSSL = ConfigManager.getConfig().getBoolean("database.mysql.useSSL", false);
+            boolean autoReconnect = ConfigManager.getConfig().getBoolean("database.mysql.autoReconnect", true);
 
             dataSource.setServerName(host);
             dataSource.setPort(port);
@@ -46,12 +37,12 @@ public class MySQLProvider implements DatabaseProvider {
             dataSource.setCharacterEncoding("utf8");
 
             try (Connection conn = dataSource.getConnection()) {
-                plugin.getLogger().info("MySQL подключение успешно установлено!");
+                HomesPlugin.getInstance().getLogger().info("MySQL подключение успешно установлено!");
             }
 
             createTables();
         } catch (SQLException e) {
-            plugin.getLogger().severe("Ошибка инициализации MySQL: " + e.getMessage());
+            HomesPlugin.getInstance().getLogger().severe("Ошибка инициализации MySQL: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -83,9 +74,9 @@ public class MySQLProvider implements DatabaseProvider {
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
             stmt.execute(invitesSql);
-            plugin.getLogger().info("MySQL таблицы успешно созданы!");
+            HomesPlugin.getInstance().getLogger().info("MySQL таблицы успешно созданы!");
         } catch (SQLException e) {
-            plugin.getLogger().severe("Ошибка создания таблиц MySQL: " + e.getMessage());
+            HomesPlugin.getInstance().getLogger().severe("Ошибка создания таблиц MySQL: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -116,7 +107,7 @@ public class MySQLProvider implements DatabaseProvider {
             pstmt.executeUpdate();
             return true;
         } catch (SQLException e) {
-            plugin.getLogger().warning("Ошибка создания дома: " + e.getMessage());
+            HomesPlugin.getInstance().getLogger().warning("Ошибка создания дома: " + e.getMessage());
             return false;
         }
     }
@@ -132,7 +123,7 @@ public class MySQLProvider implements DatabaseProvider {
             int affected = pstmt.executeUpdate();
             return affected > 0;
         } catch (SQLException e) {
-            plugin.getLogger().warning("Ошибка удаления дома: " + e.getMessage());
+            HomesPlugin.getInstance().getLogger().warning("Ошибка удаления дома: " + e.getMessage());
             return false;
         }
     }
@@ -149,7 +140,7 @@ public class MySQLProvider implements DatabaseProvider {
             int affected = pstmt.executeUpdate();
             return affected > 0;
         } catch (SQLException e) {
-            plugin.getLogger().warning("Ошибка переименования дома: " + e.getMessage());
+            HomesPlugin.getInstance().getLogger().warning("Ошибка переименования дома: " + e.getMessage());
             return false;
         }
     }
@@ -177,7 +168,7 @@ public class MySQLProvider implements DatabaseProvider {
                 );
             }
         } catch (SQLException e) {
-            plugin.getLogger().warning("Ошибка получения дома: " + e.getMessage());
+            HomesPlugin.getInstance().getLogger().warning("Ошибка получения дома: " + e.getMessage());
         }
         return null;
     }
@@ -205,7 +196,7 @@ public class MySQLProvider implements DatabaseProvider {
                 ));
             }
         } catch (SQLException e) {
-            plugin.getLogger().warning("Ошибка получения списка домов: " + e.getMessage());
+            HomesPlugin.getInstance().getLogger().warning("Ошибка получения списка домов: " + e.getMessage());
         }
         return homes;
     }
@@ -222,7 +213,7 @@ public class MySQLProvider implements DatabaseProvider {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            plugin.getLogger().warning("Ошибка подсчета домов: " + e.getMessage());
+            HomesPlugin.getInstance().getLogger().warning("Ошибка подсчета домов: " + e.getMessage());
         }
         return 0;
     }
@@ -273,7 +264,7 @@ public class MySQLProvider implements DatabaseProvider {
                 return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            plugin.getLogger().warning("Ошибка проверки приглашения: " + e.getMessage());
+            HomesPlugin.getInstance().getLogger().warning("Ошибка проверки приглашения: " + e.getMessage());
         }
         return false;
     }
@@ -293,7 +284,7 @@ public class MySQLProvider implements DatabaseProvider {
                 invitedPlayers.add(UUID.fromString(rs.getString("invited_uuid")));
             }
         } catch (SQLException e) {
-            plugin.getLogger().warning("Ошибка получения списка приглашённых: " + e.getMessage());
+            HomesPlugin.getInstance().getLogger().warning("Ошибка получения списка приглашённых: " + e.getMessage());
         }
         return invitedPlayers;
     }
@@ -323,13 +314,13 @@ public class MySQLProvider implements DatabaseProvider {
                 ));
             }
         } catch (SQLException e) {
-            plugin.getLogger().warning("Ошибка получения домов с приглашениями: " + e.getMessage());
+            HomesPlugin.getInstance().getLogger().warning("Ошибка получения домов с приглашениями: " + e.getMessage());
         }
         return homes;
     }
 
     @Override
     public void close() {
-        plugin.getLogger().info("MySQL соединение закрыто!");
+        HomesPlugin.getInstance().getLogger().info("MySQL соединение закрыто!");
     }
 }
