@@ -1,6 +1,7 @@
 package io.github.sxnsh1ness.homes.commands;
 
 import io.github.sxnsh1ness.homes.config.ConfigManager;
+import io.github.sxnsh1ness.homes.config.PluginMessages;
 import io.github.sxnsh1ness.homes.database.DatabaseManager;
 import io.github.sxnsh1ness.homes.utils.LuckPermsHelper;
 import net.kyori.adventure.text.Component;
@@ -36,14 +37,12 @@ public class SetHomeCommand implements CommandExecutor {
         String homeName = args[0];
 
         if (homeName.length() > 16) {
-            String message = ConfigManager.getMessage("name-too-long");
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "name-too-long");
             return true;
         }
 
         if (!homeName.matches("[a-zA-Zа-яА-Я0-9_-]+")) {
-            String message = ConfigManager.getMessage("invalid-name");
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "invalid-name");
             return true;
         }
 
@@ -54,9 +53,7 @@ public class SetHomeCommand implements CommandExecutor {
 
         // Если лимит не безлимитный (-1) и дом новый (не обновление)
         if (playerLimit != -1 && homeCount >= playerLimit && !homeExists) {
-            String message = ConfigManager.getMessage("home-limit-reached",
-                    Map.of("limit", String.valueOf(playerLimit)));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "home-limit-reached", "{limit}", String.valueOf(playerLimit));
             return true;
         }
 
@@ -64,15 +61,11 @@ public class SetHomeCommand implements CommandExecutor {
         boolean success = databaseManager.createHome(player.getUniqueId(), homeName, player.getLocation());
 
         if (success) {
-            String message = ConfigManager.getMessage("home-set",
-                    Map.of("name", homeName));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "home-set", "{name}", homeName);
         } else {
             databaseManager.deleteHome(player.getUniqueId(), homeName);
             databaseManager.createHome(player.getUniqueId(), homeName, player.getLocation());
-            String message = ConfigManager.getMessage("home-updated",
-                    Map.of("name", homeName));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "home-updated", "{name}", homeName);
         }
         return true;
     }
