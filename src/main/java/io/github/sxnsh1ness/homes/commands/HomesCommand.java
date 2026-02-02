@@ -1,6 +1,6 @@
 package io.github.sxnsh1ness.homes.commands;
 
-import io.github.sxnsh1ness.homes.config.ConfigManager;
+import io.github.sxnsh1ness.homes.config.PluginMessages;
 import io.github.sxnsh1ness.homes.database.DatabaseManager;
 import io.github.sxnsh1ness.homes.database.Home;
 import io.github.sxnsh1ness.homes.utils.LuckPermsHelper;
@@ -12,7 +12,6 @@ import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-import java.util.Map;
 
 public class HomesCommand implements CommandExecutor {
 
@@ -34,20 +33,16 @@ public class HomesCommand implements CommandExecutor {
         String limitDisplay = playerLimit == -1 ? "∞" : String.valueOf(playerLimit);
 
         if (homes.isEmpty()) {
-            String message = ConfigManager.getMessage("no-homes");
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player,"no-homes");
             player.sendMessage(Component.text("Используйте /sethome <название> чтобы создать дом."));
             return true;
         }
 
-        String header = ConfigManager.getMessage("homes-header");
-        player.sendMessage(Component.text(header));
+        PluginMessages.send(player, "homes-header");
 
-        String title = ConfigManager.getMessage("homes-title",
-                Map.of("count", String.valueOf(homes.size()), "limit", limitDisplay));
-        player.sendMessage(Component.text(title));
+        PluginMessages.send(player, "homes-title", "{count}", String.valueOf(homes.size()), "{limit}", limitDisplay);
 
-        player.sendMessage(Component.text(ConfigManager.getMessage("homes-header")));
+        PluginMessages.send(player, "homes-header");
 
         for (Home home : homes) {
             String homeLine = String.format("§8• §b§l%s §8- §a%s §8(§7%.0f, %.0f, %.0f§8)",
@@ -60,11 +55,9 @@ public class HomesCommand implements CommandExecutor {
             player.sendMessage(Component.text(homeLine));
         }
 
-        String footer = ConfigManager.getMessage("homes-footer");
-        player.sendMessage(Component.text(footer));
+        PluginMessages.send(player, "homes-footer");
 
-        String hint = ConfigManager.getMessage("homes-hint");
-        player.sendMessage(Component.text(hint));
+        PluginMessages.send(player, "homes-hint");
         return true;
     }
 }
