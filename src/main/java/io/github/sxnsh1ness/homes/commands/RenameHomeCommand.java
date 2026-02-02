@@ -1,6 +1,7 @@
 package io.github.sxnsh1ness.homes.commands;
 
 import io.github.sxnsh1ness.homes.config.ConfigManager;
+import io.github.sxnsh1ness.homes.config.PluginMessages;
 import io.github.sxnsh1ness.homes.database.DatabaseManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
@@ -35,39 +36,31 @@ public class RenameHomeCommand implements CommandExecutor {
         String newName = args[1];
 
         if (newName.length() > 16) {
-            String message = ConfigManager.getMessage("name-too-long");
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "name-too-long");
             return true;
         }
 
         if (!newName.matches("[a-zA-Zа-яА-Я0-9_-]+")) {
-            String message = ConfigManager.getMessage("invalid-name");
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "invalid-name");
             return true;
         }
 
         // Проверка, существует ли старый дом
         if (databaseManager.getHome(player.getUniqueId(), oldName) == null) {
-            String message = ConfigManager.getMessage("home-not-found",
-                    Map.of("name", oldName));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "home-not-found", "{name}", oldName);
             return true;
         }
 
         // Проверка, не существует ли уже дом с новым названием
         if (databaseManager.getHome(player.getUniqueId(), newName) != null) {
-            String message = ConfigManager.getMessage("home-exists",
-                    Map.of("name", newName));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "home-exists", "{name}", newName);
             return true;
         }
 
         boolean success = databaseManager.renameHome(player.getUniqueId(), oldName, newName);
 
         if (success) {
-            String message = ConfigManager.getMessage("home-renamed",
-                    Map.of("old", oldName, "new", newName));
-            player.sendMessage(Component.text(message));
+            PluginMessages.send(player, "home-renamed", "{old}", oldName, "{new}", newName);
         } else {
             player.sendMessage(Component.text("Ошибка переименования дома!"));
         }
