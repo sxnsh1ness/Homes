@@ -37,12 +37,12 @@ public final class HomesPlugin extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
         }
 
-        databaseManager = new DatabaseManager(this);
+        databaseManager = new DatabaseManager();
         databaseManager.initialize();
 
         cooldownManager = new CooldownManager();
 
-        teleportManager = new TeleportManager(this, cooldownManager);
+        teleportManager = new TeleportManager(cooldownManager);
 
         homeGUI = new HomeGUI(databaseManager, teleportManager, cooldownManager);
         InviteGUI inviteGUI = new InviteGUI(this, databaseManager, homeGUI);
