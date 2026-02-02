@@ -2,6 +2,7 @@ package io.github.sxnsh1ness.homes.utils;
 
 import io.github.sxnsh1ness.homes.HomesPlugin;
 import io.github.sxnsh1ness.homes.config.ConfigManager;
+import io.github.sxnsh1ness.homes.config.PluginMessages;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
@@ -16,13 +17,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public class TeleportManager {
-
-    private final JavaPlugin plugin;
     private final CooldownManager cooldownManager;
     private final Map<UUID, TeleportTask> activeTeleports;
 
-    public TeleportManager(JavaPlugin plugin, CooldownManager cooldownManager) {
-        this.plugin = plugin;
+    public TeleportManager(CooldownManager cooldownManager) {
         this.cooldownManager = cooldownManager;
         this.activeTeleports = new HashMap<>();
     }
@@ -42,8 +40,7 @@ public class TeleportManager {
         // Сохраняем начальную позицию
         Location startLocation = player.getLocation().clone();
 
-        String message = ConfigManager.getMessage("teleport-started");
-        player.sendMessage(message);
+        PluginMessages.send(player, "teleport-started");
 
         TeleportTask task = new TeleportTask(player, startLocation, destination, homeName, delay);
         activeTeleports.put(player.getUniqueId(), task);
@@ -53,9 +50,7 @@ public class TeleportManager {
     private void teleportImmediately(Player player, Location destination, String homeName) {
         player.teleport(destination);
 
-        String message = ConfigManager.getMessage("home-teleported",
-                Map.of("name", homeName));
-        player.sendMessage(message);
+        PluginMessages.send(player, "home-teleported", "{name}", homeName);
 
         // Устанавливаем кулдаун если нужно
         boolean applyOnCommand = ConfigManager.getConfig().getBoolean("cooldown.apply-on-command", true);
@@ -174,8 +169,7 @@ public class TeleportManager {
             // Проверяем, не сдвинулся ли игрок
             boolean cancelOnMove = ConfigManager.getConfig().getBoolean("teleport.cancel-on-move", true);
             if (cancelOnMove && hasMoved()) {
-                String message = ConfigManager.getMessage("teleport-cancelled");
-                player.sendMessage(message);
+                PluginMessages.send(player, "teleport-cancelled");
                 cleanup();
                 return;
             }
@@ -190,9 +184,7 @@ public class TeleportManager {
             if (ticksLeft <= 0) {
                 player.teleport(destination);
 
-                String message = ConfigManager.getMessage("home-teleported",
-                        Map.of("name", homeName));
-                player.sendMessage(message);
+                PluginMessages.send(player, "home-teleported", "{name}", homeName);
 
                 player.getWorld().spawnParticle(Particle.PORTAL, destination, 50, 0.5, 1, 0.5, 0.1);
 
