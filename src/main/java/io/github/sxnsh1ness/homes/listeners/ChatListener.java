@@ -1,7 +1,7 @@
 package io.github.sxnsh1ness.homes.listeners;
 
 import io.github.sxnsh1ness.homes.HomesPlugin;
-import io.github.sxnsh1ness.homes.config.ConfigManager;
+import io.github.sxnsh1ness.homes.config.PluginMessages;
 import io.github.sxnsh1ness.homes.database.DatabaseManager;
 import io.github.sxnsh1ness.homes.gui.HomeGUI;
 import io.github.sxnsh1ness.homes.gui.InviteGUI;
@@ -60,9 +60,7 @@ public class ChatListener implements Listener {
                     player.sendMessage(Component.text(""));
 
                     // Открываем меню обратно
-                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> {
-                        inviteGUI.openInviteMenu(player, homeName);
-                    });
+                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> inviteGUI.openInviteMenu(player, homeName));
                     return;
                 }
 
@@ -75,9 +73,7 @@ public class ChatListener implements Listener {
                     player.sendMessage(Component.text(""));
 
                     // Открываем меню обратно
-                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> {
-                        inviteGUI.openInviteMenu(player, homeName);
-                    });
+                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> inviteGUI.openInviteMenu(player, homeName));
                     return;
                 }
 
@@ -89,9 +85,7 @@ public class ChatListener implements Listener {
                     player.sendMessage(Component.text(""));
 
                     // Открываем меню обратно
-                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> {
-                        inviteGUI.openInviteMenu(player, homeName);
-                    });
+                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> inviteGUI.openInviteMenu(player, homeName));
                     return;
                 }
 
@@ -103,9 +97,7 @@ public class ChatListener implements Listener {
                     player.sendMessage(Component.text(""));
 
                     // Открываем меню обратно
-                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> {
-                        inviteGUI.openInviteMenu(player, homeName);
-                    });
+                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> inviteGUI.openInviteMenu(player, homeName));
                     return;
                 }
 
@@ -126,9 +118,7 @@ public class ChatListener implements Listener {
                     targetPlayer.sendMessage(Component.text(""));
 
                     // Открываем обновленное меню
-                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> {
-                        inviteGUI.openInviteMenu(player, homeName);
-                    });
+                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> inviteGUI.openInviteMenu(player, homeName));
                 } else {
                     player.sendMessage(Component.text("Ошибка приглашения игрока!")
                             .color(NamedTextColor.RED));
@@ -153,23 +143,20 @@ public class ChatListener implements Listener {
 
             // Проверка длины
             if (newName.length() > 16) {
-                String message = ConfigManager.getMessage("name-too-long");
-                player.sendMessage(Component.text(message));
+                PluginMessages.send(player, "name-too-long");
                 return;
             }
 
             // Проверка символов
             if (!newName.matches("[a-zA-Zа-яА-Я0-9_-]+")) {
-                String message = ConfigManager.getMessage("invalid-name");
-                player.sendMessage(Component.text(message));
+                PluginMessages.send(player, "invalid-name");
                 return;
             }
 
             // Проверка существования
             if (databaseManager.getHome(uuid, newName) != null) {
-                String message = ConfigManager.getMessage("home-exists",
-                        Map.of("name", newName));
-                player.sendMessage(Component.text(message));
+
+                PluginMessages.send(player, "home-exists", "{name}", newName);
                 return;
             }
 
@@ -177,9 +164,7 @@ public class ChatListener implements Listener {
             boolean success = databaseManager.renameHome(uuid, oldName, newName);
 
             if (success) {
-                String message = ConfigManager.getMessage("home-renamed",
-                        Map.of("old", oldName, "new", newName));
-                player.sendMessage(Component.text(message));
+                PluginMessages.send(player, "home-renamed", "{old}", oldName, "{new}", newName);
             } else {
                 player.sendMessage(Component.text("§cОшибка переименования дома!"));
             }
@@ -205,15 +190,13 @@ public class ChatListener implements Listener {
 
             // Проверка длины
             if (homeName.length() > 16) {
-                String message = ConfigManager.getMessage("name-too-long");
-                player.sendMessage(Component.text(message));
+                PluginMessages.send(player, "name-too-long");
                 return;
             }
 
             // Проверка символов
             if (!homeName.matches("[a-zA-Zа-яА-Я0-9_-]+")) {
-                String message = ConfigManager.getMessage("invalid-name");
-                player.sendMessage(Component.text(message));
+                PluginMessages.send(player, "invalid-name");
                 return;
             }
 
@@ -222,9 +205,7 @@ public class ChatListener implements Listener {
             int limit = LuckPermsHelper.getHighestLimit(player);
 
             if (limit != -1 && homeCount >= limit) {
-                String message = ConfigManager.getMessage("home-limit-reached",
-                        Map.of("limit", String.valueOf(limit)));
-                player.sendMessage(Component.text(message));
+                PluginMessages.send(player, "home-limit-reached", "{limit}", String.valueOf(limit));
                 return;
             }
 
@@ -234,16 +215,12 @@ public class ChatListener implements Listener {
                 boolean success = databaseManager.createHome(uuid, homeName, player.getLocation());
 
                 if (success) {
-                    String message = ConfigManager.getMessage("home-updated",
-                            Map.of("name", homeName));
                     player.sendMessage(Component.text(""));
-                    player.sendMessage(Component.text(message));
+                    PluginMessages.send(player, "home-updated", "{name}", homeName);
                     player.sendMessage(Component.text(""));
 
                     // Открываем GUI обратно через синхронную задачу
-                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> {
-                        homeGUI.openGUI(player, 0);
-                    });
+                    Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> homeGUI.openGUI(player, 0));
                 } else {
                     player.sendMessage(Component.text("§cОшибка обновления дома!"));
                 }
@@ -254,16 +231,12 @@ public class ChatListener implements Listener {
             boolean success = databaseManager.createHome(uuid, homeName, player.getLocation());
 
             if (success) {
-                String message = ConfigManager.getMessage("home-set",
-                        Map.of("name", homeName));
                 player.sendMessage(Component.text(""));
-                player.sendMessage(Component.text(message));
+                PluginMessages.send(player, "home-set", "{name}", homeName);
                 player.sendMessage(Component.text(""));
 
                 // Открываем GUI обратно через синхронную задачу
-                Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> {
-                    homeGUI.openGUI(player, 0);
-                });
+                Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> homeGUI.openGUI(player, 0));
             } else {
                 player.sendMessage(Component.text("§cОшибка создания дома!"));
             }
