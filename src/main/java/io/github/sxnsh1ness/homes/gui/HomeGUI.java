@@ -2,6 +2,7 @@ package io.github.sxnsh1ness.homes.gui;
 
 import io.github.sxnsh1ness.homes.HomesPlugin;
 import io.github.sxnsh1ness.homes.config.ConfigManager;
+import io.github.sxnsh1ness.homes.config.PluginMessages;
 import io.github.sxnsh1ness.homes.database.DatabaseManager;
 import io.github.sxnsh1ness.homes.database.Home;
 import io.github.sxnsh1ness.homes.utils.CooldownManager;
@@ -23,7 +24,6 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 
@@ -287,17 +287,13 @@ public class HomeGUI implements Listener {
                 // Проверка кулдауна
                 if (!cooldownManager.hasCooldown(player)) {
                     int remainingTime = cooldownManager.getRemainingCooldown(player);
-                    String message = ConfigManager.getMessage("command-on-cooldown",
-                            Map.of("time", String.valueOf(remainingTime)));
-                    player.sendMessage(Component.text(message));
+                    PluginMessages.send(player, "command-on-cooldown", "{time}", String.valueOf(remainingTime));
                     return;
                 }
 
                 // Проверка мира
                 if (home.getLocation().getWorld() == null) {
-                    String message = ConfigManager.getMessage("world-not-found",
-                            Map.of("world", home.getWorldName()));
-                    player.sendMessage(Component.text(message));
+                    PluginMessages.send(player, "world-not-found", "{world}", home.getWorldName());
                     return;
                 }
 
@@ -336,9 +332,7 @@ public class HomeGUI implements Listener {
                 boolean success = databaseManager.deleteHome(player.getUniqueId(), homeName);
 
                 if (success) {
-                    String message = ConfigManager.getMessage("home-deleted",
-                            Map.of("name", homeName));
-                    player.sendMessage(Component.text(message));
+                    PluginMessages.send(player, "home-deleted", "{name}", homeName);
                     openGUI(player, playerPages.getOrDefault(player.getUniqueId(), 0));
                 } else {
                     player.sendMessage(Component.text("Ошибка удаления дома!")
