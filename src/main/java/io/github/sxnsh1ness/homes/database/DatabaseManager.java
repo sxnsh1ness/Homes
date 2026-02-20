@@ -5,8 +5,8 @@ import io.github.sxnsh1ness.homes.config.ConfigManager;
 import io.github.sxnsh1ness.homes.database.providers.DatabaseProvider;
 import io.github.sxnsh1ness.homes.database.providers.MySQLProvider;
 import io.github.sxnsh1ness.homes.database.providers.SQLiteProvider;
+import io.github.sxnsh1ness.homes.models.Home;
 import org.bukkit.Location;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 import java.util.UUID;

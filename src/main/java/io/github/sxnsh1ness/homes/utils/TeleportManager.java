@@ -26,18 +26,15 @@ public class TeleportManager {
     }
 
     public void teleportWithDelay(Player player, Location destination, String homeName) {
-        // Отменяем предыдущую телепортацию если она есть
         cancelTeleport(player);
 
         int delay = ConfigManager.getConfig().getInt("teleport.delay", 5);
 
-        // Если задержка 0 или меньше, телепортируем сразу
         if (delay <= 0) {
             teleportImmediately(player, destination, homeName);
             return;
         }
 
-        // Сохраняем начальную позицию
         Location startLocation = player.getLocation().clone();
 
         PluginMessages.send(player, "teleport-started");
@@ -52,7 +49,6 @@ public class TeleportManager {
 
         PluginMessages.send(player, "home-teleported", "{name}", homeName);
 
-        // Устанавливаем кулдаун если нужно
         boolean applyOnCommand = ConfigManager.getConfig().getBoolean("cooldown.apply-on-command", true);
         if (!applyOnCommand) {
             cooldownManager.setCooldown(player);

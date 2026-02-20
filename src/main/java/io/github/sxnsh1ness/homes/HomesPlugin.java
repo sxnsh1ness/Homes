@@ -45,7 +45,7 @@ public final class HomesPlugin extends JavaPlugin {
         teleportManager = new TeleportManager(cooldownManager);
 
         homeGUI = new HomeGUI(databaseManager, teleportManager, cooldownManager);
-        InviteGUI inviteGUI = new InviteGUI(this, databaseManager, homeGUI);
+        InviteGUI inviteGUI = new InviteGUI(databaseManager, homeGUI);
         homeGUI.setInviteGUI(inviteGUI);
         ChatListener chatListener = new ChatListener(databaseManager, homeGUI);
         chatListener.setInviteGUI(inviteGUI);
@@ -55,8 +55,7 @@ public final class HomesPlugin extends JavaPlugin {
         getCommand("sethome").setExecutor(new SetHomeCommand(databaseManager));
         getCommand("deletehome").setExecutor(new DeleteHomeCommand(databaseManager));
         getCommand("renamehome").setExecutor(new RenameHomeCommand(databaseManager));
-        getCommand("homes").setExecutor(new HomesCommand(databaseManager));
-        getCommand("homegui").setExecutor(new HomeGUICommand(homeGUI));
+        getCommand("homes").setExecutor(new HomesCommand(homeGUI));
     }
 
     @Override

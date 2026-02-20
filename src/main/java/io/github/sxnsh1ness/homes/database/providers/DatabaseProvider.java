@@ -1,8 +1,7 @@
 package io.github.sxnsh1ness.homes.database.providers;
 
-import io.github.sxnsh1ness.homes.database.Home;
+import io.github.sxnsh1ness.homes.models.Home;
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.UUID;

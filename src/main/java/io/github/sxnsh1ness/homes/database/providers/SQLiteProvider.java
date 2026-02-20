@@ -1,10 +1,8 @@
 package io.github.sxnsh1ness.homes.database.providers;
 
 import io.github.sxnsh1ness.homes.HomesPlugin;
-import io.github.sxnsh1ness.homes.database.Home;
+import io.github.sxnsh1ness.homes.models.Home;
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.sql.*;

@@ -1,5 +1,6 @@
 package io.github.sxnsh1ness.homes.gui;
 
+import io.github.sxnsh1ness.homes.HomesPlugin;
 import io.github.sxnsh1ness.homes.database.DatabaseManager;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -22,7 +23,6 @@ import java.util.*;
 
 public class InviteGUI implements Listener {
 
-    private final JavaPlugin plugin;
     private final DatabaseManager databaseManager;
     private final HomeGUI homeGUI;
 
@@ -31,11 +31,10 @@ public class InviteGUI implements Listener {
     @Getter
     private final Map<UUID, Boolean> pendingInvite = new HashMap<>();
 
-    public InviteGUI(JavaPlugin plugin, DatabaseManager databaseManager, HomeGUI homeGUI) {
-        this.plugin = plugin;
+    public InviteGUI(DatabaseManager databaseManager, HomeGUI homeGUI) {
         this.databaseManager = databaseManager;
         this.homeGUI = homeGUI;
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        HomesPlugin.getInstance().getServer().getPluginManager().registerEvents(this, HomesPlugin.getInstance());
     }
 
     public void openInviteMenu(Player player, String homeName) {
@@ -48,7 +47,6 @@ public class InviteGUI implements Listener {
                         .color(NamedTextColor.DARK_PURPLE)
                         .decorate(TextDecoration.BOLD));
 
-        // Добавляем приглашённых игроков
         int slot = 0;
         for (UUID invitedUUID : invitedPlayers) {
             if (slot >= 45) break;
@@ -69,7 +67,6 @@ public class InviteGUI implements Listener {
             }
         }
 
-        // Кнопка добавления игрока
         ItemStack addButton = new ItemStack(Material.LIME_DYE);
         ItemMeta addMeta = addButton.getItemMeta();
         addMeta.displayName(Component.text("+ Пригласить игрока")
@@ -85,7 +82,6 @@ public class InviteGUI implements Listener {
         addButton.setItemMeta(addMeta);
         gui.setItem(47, addButton);
 
-        // Кнопка возврата
         ItemStack backButton = new ItemStack(Material.ARROW);
         ItemMeta backMeta = backButton.getItemMeta();
         backMeta.displayName(Component.text("← Назад")
@@ -93,7 +89,6 @@ public class InviteGUI implements Listener {
         backButton.setItemMeta(backMeta);
         gui.setItem(49, backButton);
 
-        // Кнопка закрытия
         ItemStack closeButton = new ItemStack(Material.RED_STAINED_GLASS_PANE);
         ItemMeta closeMeta = closeButton.getItemMeta();
         closeMeta.displayName(Component.text("Закрыть")
@@ -167,21 +162,18 @@ public class InviteGUI implements Listener {
             return;
         }
 
-        // Кнопка возврата
         if (clicked.getType() == Material.ARROW) {
             openedHome.remove(player.getUniqueId());
             homeGUI.openGUI(player, 0);
             return;
         }
 
-        // Кнопка закрытия
         if (clicked.getType() == Material.RED_STAINED_GLASS_PANE) {
             openedHome.remove(player.getUniqueId());
             player.closeInventory();
             return;
         }
 
-        // Клик по голове игрока - удаление приглашения
         if (clicked.getType() == Material.PLAYER_HEAD && event.isRightClick()) {
             SkullMeta meta = (SkullMeta) clicked.getItemMeta();
             OfflinePlayer targetPlayer = meta.getOwningPlayer();
@@ -192,12 +184,9 @@ public class InviteGUI implements Listener {
                 if (success) {
                     player.sendMessage(Component.text("Приглашение игрока '" + targetPlayer.getName() + "' удалено!", NamedTextColor.GREEN));
 
-                    // Уведомляем игрока если онлайн
                     if (targetPlayer.isOnline()) {
                         ((Player) targetPlayer).sendMessage(Component.text("Ваше приглашение в дом '" + homeName + "' было удалено!", NamedTextColor.YELLOW));
                     }
-
-                    // Обновляем меню
                     openInviteMenu(player, homeName);
                 } else {
                     player.sendMessage(Component.text("Ошибка удаления приглашения!", NamedTextColor.RED));

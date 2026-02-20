@@ -21,11 +21,6 @@ commands:
   homes:
     description: Посмотреть список ваших домов
     usage: /homes
-    aliases: [listhomes]
-  homegui:
-    description: Открыть GUI управления домами
-    usage: /homegui
-    aliases: [homesgui]
 permissions:
   homes.use:
     description: Позволяет использовать все команды плагина

@@ -3,7 +3,7 @@ package io.github.sxnsh1ness.homes.database.providers;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import io.github.sxnsh1ness.homes.HomesPlugin;
 import io.github.sxnsh1ness.homes.config.ConfigManager;
-import io.github.sxnsh1ness.homes.database.Home;
+import io.github.sxnsh1ness.homes.models.Home;
 import org.bukkit.Location;
 
 import java.sql.*;

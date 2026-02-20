@@ -4,7 +4,7 @@ import io.github.sxnsh1ness.homes.HomesPlugin;
 import io.github.sxnsh1ness.homes.config.ConfigManager;
 import io.github.sxnsh1ness.homes.config.PluginMessages;
 import io.github.sxnsh1ness.homes.database.DatabaseManager;
-import io.github.sxnsh1ness.homes.database.Home;
+import io.github.sxnsh1ness.homes.models.Home;
 import io.github.sxnsh1ness.homes.utils.CooldownManager;
 import io.github.sxnsh1ness.homes.utils.LuckPermsHelper;
 import io.github.sxnsh1ness.homes.utils.TeleportManager;
@@ -65,7 +65,6 @@ public class HomeGUI implements Listener {
                         .color(NamedTextColor.DARK_PURPLE)
                         .decorate(TextDecoration.BOLD));
 
-        // Добавляем дома на текущую страницу
         int startIndex = page * ITEMS_PER_PAGE;
         int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, homes.size());
 
@@ -75,7 +74,6 @@ public class HomeGUI implements Listener {
             gui.setItem(slot, createHomeItem(home));
         }
 
-        // Добавляем кнопку создания дома
         int playerLimit = LuckPermsHelper.getHighestLimit(player);
         String limitDisplay = playerLimit == -1 ? "∞" : String.valueOf(playerLimit);
 
@@ -114,7 +112,6 @@ public class HomeGUI implements Listener {
             gui.setItem(49, limitReached);
         }
 
-        // Навигация
         if (page > 0) {
             ItemStack prevPage = new ItemStack(Material.ARROW);
             ItemMeta meta = prevPage.getItemMeta();
@@ -133,7 +130,6 @@ public class HomeGUI implements Listener {
             gui.setItem(53, nextPage);
         }
 
-        // Кнопка закрытия
         ItemStack close = new ItemStack(Material.RED_STAINED_GLASS_PANE);
         ItemMeta closeMeta = close.getItemMeta();
         closeMeta.displayName(Component.text("Закрыть")
@@ -171,7 +167,6 @@ public class HomeGUI implements Listener {
                         home.getX(), home.getY(), home.getZ()))
                 .color(NamedTextColor.GRAY));
 
-        // Количество приглашённых
         int invitedCount = databaseManager.getInvitedPlayers(home.getPlayerUUID(), home.getName()).size();
         lore.add(Component.text("Приглашено: " + invitedCount + " " + (invitedCount == 1 ? "игрок" : "игроков"))
                 .color(NamedTextColor.GRAY));
@@ -214,7 +209,6 @@ public class HomeGUI implements Listener {
 
         int slot = event.getSlot();
 
-        // Навигация
         if (slot == 45 && clicked.getType() == Material.ARROW) {
             int currentPage = playerPages.getOrDefault(player.getUniqueId(), 0);
             openGUI(player, currentPage - 1);
@@ -227,13 +221,11 @@ public class HomeGUI implements Listener {
             return;
         }
 
-        // Закрыть
         if (slot == 50 && clicked.getType() == Material.RED_STAINED_GLASS_PANE) {
             player.closeInventory();
             return;
         }
 
-        // Создать дом
         if (slot == 49 && clicked.getType() == Material.EMERALD) {
             pendingCreate.put(player.getUniqueId(), true);
             player.closeInventory();
@@ -257,7 +249,6 @@ public class HomeGUI implements Listener {
             return;
         }
 
-        // Взаимодействие с домом
         if (clicked.getType() == Material.RED_BED) {
             Component displayName = clicked.getItemMeta().displayName();
             if (displayName == null) return;
@@ -272,7 +263,6 @@ public class HomeGUI implements Listener {
                 return;
             }
 
-            // Средняя кнопка мыши - Управление приглашениями
             if (event.getClick().name().equals("MIDDLE")) {
                 if (inviteGUI != null) {
                     inviteGUI.openInviteMenu(player, homeName);
@@ -280,24 +270,20 @@ public class HomeGUI implements Listener {
                 return;
             }
 
-            // ЛКМ - Телепортация
             if (event.isLeftClick() && !event.isShiftClick()) {
                 player.closeInventory();
 
-                // Проверка кулдауна
                 if (!cooldownManager.hasCooldown(player)) {
                     int remainingTime = cooldownManager.getRemainingCooldown(player);
                     PluginMessages.send(player, "command-on-cooldown", "{time}", String.valueOf(remainingTime));
                     return;
                 }
 
-                // Проверка мира
                 if (home.getLocation().getWorld() == null) {
                     PluginMessages.send(player, "world-not-found", "{world}", home.getWorldName());
                     return;
                 }
 
-                // Устанавливаем кулдаун если нужно
                 boolean applyOnCommand = ConfigManager.getConfig().getBoolean("cooldown.apply-on-command", true);
                 if (applyOnCommand) {
                     cooldownManager.setCooldown(player);

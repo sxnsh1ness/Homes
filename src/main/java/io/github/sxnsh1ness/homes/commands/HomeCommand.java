@@ -3,7 +3,7 @@ package io.github.sxnsh1ness.homes.commands;
 import io.github.sxnsh1ness.homes.config.ConfigManager;
 import io.github.sxnsh1ness.homes.config.PluginMessages;
 import io.github.sxnsh1ness.homes.database.DatabaseManager;
-import io.github.sxnsh1ness.homes.database.Home;
+import io.github.sxnsh1ness.homes.models.Home;
 import io.github.sxnsh1ness.homes.utils.CooldownManager;
 import io.github.sxnsh1ness.homes.utils.TeleportManager;
 import net.kyori.adventure.text.Component;

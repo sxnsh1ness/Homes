@@ -153,14 +153,12 @@ public class ChatListener implements Listener {
                 return;
             }
 
-            // Проверка существования
             if (databaseManager.getHome(uuid, newName) != null) {
 
                 PluginMessages.send(player, "home-exists", "{name}", newName);
                 return;
             }
 
-            // Переименование
             boolean success = databaseManager.renameHome(uuid, oldName, newName);
 
             if (success) {
@@ -172,14 +170,12 @@ public class ChatListener implements Listener {
             return;
         }
 
-        // Проверка на создание
         if (pendingCreate.containsKey(uuid)) {
             event.setCancelled(true);
             pendingCreate.remove(uuid);
 
             String homeName = ((TextComponent) event.message()).content();
 
-            // Отмена
             if (homeName.equalsIgnoreCase("отмена") || homeName.equalsIgnoreCase("cancel")) {
                 player.sendMessage(Component.text(""));
                 player.sendMessage(Component.text("Создание дома отменено.")
@@ -188,19 +184,16 @@ public class ChatListener implements Listener {
                 return;
             }
 
-            // Проверка длины
             if (homeName.length() > 16) {
                 PluginMessages.send(player, "name-too-long");
                 return;
             }
 
-            // Проверка символов
             if (!homeName.matches("[a-zA-Zа-яА-Я0-9_-]+")) {
                 PluginMessages.send(player, "invalid-name");
                 return;
             }
 
-            // Проверка лимита
             int homeCount = databaseManager.getHomeCount(uuid);
             int limit = LuckPermsHelper.getHighestLimit(player);
 
@@ -209,9 +202,7 @@ public class ChatListener implements Listener {
                 return;
             }
 
-            // Проверка существования
             if (databaseManager.getHome(uuid, homeName) != null) {
-                // Обновляем существующий дом
                 boolean success = databaseManager.createHome(uuid, homeName, player.getLocation());
 
                 if (success) {
@@ -219,7 +210,6 @@ public class ChatListener implements Listener {
                     PluginMessages.send(player, "home-updated", "{name}", homeName);
                     player.sendMessage(Component.text(""));
 
-                    // Открываем GUI обратно через синхронную задачу
                     Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> homeGUI.openGUI(player, 0));
                 } else {
                     player.sendMessage(Component.text("§cОшибка обновления дома!"));
@@ -227,7 +217,6 @@ public class ChatListener implements Listener {
                 return;
             }
 
-            // Создание нового дома
             boolean success = databaseManager.createHome(uuid, homeName, player.getLocation());
 
             if (success) {
@@ -235,7 +224,6 @@ public class ChatListener implements Listener {
                 PluginMessages.send(player, "home-set", "{name}", homeName);
                 player.sendMessage(Component.text(""));
 
-                // Открываем GUI обратно через синхронную задачу
                 Bukkit.getScheduler().runTask(HomesPlugin.getInstance(), () -> homeGUI.openGUI(player, 0));
             } else {
                 player.sendMessage(Component.text("§cОшибка создания дома!"));
